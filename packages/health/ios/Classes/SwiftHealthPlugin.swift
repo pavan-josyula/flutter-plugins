@@ -759,6 +759,11 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
         
         HKHealthStore().execute(deleteQuery)
     }
+
+    func getProductType(sample: HKSample) -> String {
+        let productType = sample.sourceRevision.productType ?? "Unknown Product"
+        return productType is String ? productType! : "Unknown Product"
+    }
     
     func getData(call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = call.arguments as? NSDictionary
@@ -844,15 +849,13 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
             switch samplesOrNil {
             case let (samples as [HKQuantitySample]) as Any:
                 let dictionaries = samples.map { sample -> NSDictionary in
-                    let productType = sample.sourceRevision.productType ?? "Unknown Product"
-                    let unwrappedProductType = productType is String ? productType : "Unknown Product"
                     return [
                         "uuid": "\(sample.uuid)",
                         "value": sample.quantity.doubleValue(for: unit ?? HKUnit.internationalUnit()),
                         "date_from": Int(sample.startDate.timeIntervalSince1970 * 1000),
                         "date_to": Int(sample.endDate.timeIntervalSince1970 * 1000),
                         "source_id": sample.sourceRevision.source.bundleIdentifier,
-                        "source_name": "\(sample.sourceRevision.source.name)-\(unwrappedProductType)",
+                        "source_name": "\(sample.sourceRevision.source.name)-\(getProductType(sample: sample))",
                         "recording_method": (sample.metadata?[HKMetadataKeyWasUserEntered] as? Bool == true)
                             ? RecordingMethod.manual.rawValue
                             : RecordingMethod.automatic.rawValue,
@@ -906,9 +909,6 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                             metadata[key] = value
                         }
                     }
-
-                    let productType = sample.sourceRevision.productType ?? "Unknown Product"
-                    let unwrappedProductType = productType is String ? productType : "Unknown Product"
                     
                     return [
                         "uuid": "\(sample.uuid)",
@@ -916,7 +916,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                         "date_from": Int(sample.startDate.timeIntervalSince1970 * 1000),
                         "date_to": Int(sample.endDate.timeIntervalSince1970 * 1000),
                         "source_id": sample.sourceRevision.source.bundleIdentifier,
-                        "source_name": "\(sample.sourceRevision.source.name)-\(unwrappedProductType)",
+                        "source_name": "\(sample.sourceRevision.source.name)-\(getProductType(sample: sample))",
                         "recording_method": (sample.metadata?[HKMetadataKeyWasUserEntered] as? Bool == true) ? RecordingMethod.manual.rawValue : RecordingMethod.automatic.rawValue,
                         "metadata": metadata
                     ]
@@ -928,8 +928,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
             case let (samplesWorkout as [HKWorkout]) as Any:
                 
                 let dictionaries = samplesWorkout.map { sample -> NSDictionary in
-                    let productType = sample.sourceRevision.productType ?? "Unknown Product"
-                    let unwrappedProductType = productType is String ? productType : "Unknown Product"
+                    
                     return [
                         "uuid": "\(sample.uuid)",
                         "workoutActivityType": workoutActivityTypeMap.first(where: {
@@ -942,7 +941,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                         "date_from": Int(sample.startDate.timeIntervalSince1970 * 1000),
                         "date_to": Int(sample.endDate.timeIntervalSince1970 * 1000),
                         "source_id": sample.sourceRevision.source.bundleIdentifier,
-                        "source_name": "\(sample.sourceRevision.source.name)-\(unwrappedProductType)",
+                        "source_name": "\(sample.sourceRevision.source.name)-\(getProductType(sample: sample))",
                         "recording_method": (sample.metadata?[HKMetadataKeyWasUserEntered] as? Bool == true) ? RecordingMethod.manual.rawValue : RecordingMethod.automatic.rawValue,
                         "workout_type": self.getWorkoutType(type: sample.workoutActivityType),
                         "total_distance": sample.totalDistance != nil ? Int(sample.totalDistance!.doubleValue(for: HKUnit.meter())) : 0,
@@ -967,8 +966,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                             samplePoint.rightEarSensitivity!.doubleValue(for: HKUnit.decibelHearingLevel()))
                     }
                     return [
-                        let productType = sample.sourceRevision.productType ?? "Unknown Product"
-                        let unwrappedProductType = productType is String ? productType : "Unknown Product"
+                        
                         "uuid": "\(sample.uuid)",
                         "frequencies": frequencies,
                         "leftEarSensitivities": leftEarSensitivities,
@@ -976,7 +974,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                         "date_from": Int(sample.startDate.timeIntervalSince1970 * 1000),
                         "date_to": Int(sample.endDate.timeIntervalSince1970 * 1000),
                         "source_id": sample.sourceRevision.source.bundleIdentifier,
-                        "source_name": "\(sample.sourceRevision.source.name)-\(unwrappedProductType)",
+                        "source_name": "\(sample.sourceRevision.source.name)-\(getProductType(sample: sample))",
                     ]
                 }
                 DispatchQueue.main.async {
@@ -991,8 +989,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                     let samples = food.objects
                     // get first sample if it exists
                     if let sample = samples.first as? HKQuantitySample {
-                    let productType = sample.sourceRevision.productType ?? "Unknown Product"
-                    let unwrappedProductType = productType is String ? productType : "Unknown Product"
+                   
                         var sampleDict = [
                             "uuid": "\(sample.uuid)",
                             "name": name,
@@ -1000,7 +997,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
                             "date_from": Int(sample.startDate.timeIntervalSince1970 * 1000),
                             "date_to": Int(sample.endDate.timeIntervalSince1970 * 1000),
                             "source_id": sample.sourceRevision.source.bundleIdentifier,
-                            "source_name": "\(sample.sourceRevision.source.name)-\(unwrappedProductType)",
+                            "source_name": "\(sample.sourceRevision.source.name)-\(getProductType(sample: sample))",
                             "recording_method": (sample.metadata?[HKMetadataKeyWasUserEntered] as? Bool == true)
                                 ? RecordingMethod.manual.rawValue
                                 : RecordingMethod.automatic.rawValue
@@ -1061,8 +1058,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
         }
         HKHealthStore().execute(voltageQuery)
         semaphore.wait()
-        let productType = sample.sourceRevision.productType ?? "Unknown Product"
-        let unwrappedProductType = productType is String ? productType : "Unknown Product"
+        
         return [
             "uuid": "\(sample.uuid)",
             "voltageValues": voltageValues,
@@ -1073,7 +1069,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
             "date_from": Int(sample.startDate.timeIntervalSince1970 * 1000),
             "date_to": Int(sample.endDate.timeIntervalSince1970 * 1000),
             "source_id": sample.sourceRevision.source.bundleIdentifier,
-            "source_name": "\(sample.sourceRevision.source.name)-\(unwrappedProductType)",
+            "source_name": "\(sample.sourceRevision.source.name)-\(getProductType(sample: sample))",
         ]
     }
     
