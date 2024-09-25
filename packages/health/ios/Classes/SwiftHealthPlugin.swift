@@ -762,7 +762,7 @@ public class SwiftHealthPlugin: NSObject, FlutterPlugin {
 
     func getProductType(sample: HKSample) -> String {
         let productType = sample.sourceRevision.productType ?? "Unknown Product"
-        return productType is String ? productType! : "Unknown Product"
+        return productType is String ? productType : "Unknown Product"
     }
     
     func getData(call: FlutterMethodCall, result: @escaping FlutterResult) {
